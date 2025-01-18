@@ -10,7 +10,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="morality-engine-theme">
       <Router>
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col w-screen">
           <Navbar />
           <main className="flex-grow">
             <Routes>
