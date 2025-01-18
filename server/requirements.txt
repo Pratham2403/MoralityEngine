@@ -1,10 +1,4 @@
-<<<<<<< HEAD
 langchain-groq
 langchain_google_genai
 uvicorn
-=======
-langchain-groq
-langchain_google_genai
-uvicorn
->>>>>>> 1353d2856f718070086cdae62eb67ac729b896db
 fastapi
