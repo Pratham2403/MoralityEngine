@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from fastapi import Request, HTTPException
 import math
 import json
 
@@ -13,7 +14,14 @@ from Agents.frontend_handler import frontend_generator
 app = FastAPI()
 
 @app.post("/moralise")
-async def moralise(input_data: dict):
+async def moralise(request: Request):
+
+    if request.headers.get('content-type') != 'application/json':
+        raise HTTPException(status_code=415, detail="Unsupported Media Type")
+
+    # Parse incoming JSON request
+    input_data = await request.json()
+
     # Print the input data for debugging
     print("Input Data:", input_data)
 
