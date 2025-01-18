@@ -111,4 +111,3 @@ Output:
             else:
                 print(f"Error after {retries} attempts: {e}. Returning None.")
                 return None
->>>>>>> 1353d2856f718070086cdae62eb67ac729b896db

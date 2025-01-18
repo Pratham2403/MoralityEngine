@@ -116,4 +116,3 @@ async def moralise(input_data: dict):
 
 # To run the FastAPI server, use:
 # uvicorn main:app --reload --host 0.0.0.0 --port 8000
->>>>>>> 1353d2856f718070086cdae62eb67ac729b896db
