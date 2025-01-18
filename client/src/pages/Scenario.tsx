@@ -10,6 +10,10 @@ import scenarios from "@/lib/scenarios.json";
 import { Textarea } from "@/components/ui/textarea";
 import { getValueCaseInsensitive } from "@/lib/helper.function";
 import axiosInstance from "@/api/axiosInstance";
+import Car from "@/sections/Car";
+import Military from "@/sections/Military";
+import Hospital from "@/sections/Hospital";
+import Sea from "@/sections/Sea";
 
 export default function Scenario() {
   const { id } = useParams();
@@ -38,8 +42,6 @@ export default function Scenario() {
     const total = parameters.ut_pr + parameters.dt_pr + parameters.ve_pr;
     setTotalPercentage(total);
   }, [parameters]);
-
-
 
   const handleSliderChange = (
     value: number | string,
@@ -86,7 +88,6 @@ export default function Scenario() {
     const res = await axiosInstance.post("/moralise", {
       parameters,
     });
-
 
     if (res.data) {
       setModelData({
@@ -288,8 +289,11 @@ export default function Scenario() {
           <TabsContent value="results">
             <Card>
               <CardContent className="pt-6">
-                <div className="aspect-video bg-muted rounded-lg mb-6 flex items-center justify-center text-muted-foreground">
-                  3D Model Visualization Area
+                <div className="aspect-video bg-muted rounded-lg mb-6">
+                  {id === "car" && <Car type={1} />}
+                  {id === "doctor" && <Hospital />}
+                  {id === "sniper" && <Military />}
+                  {id === "boat" && <Sea />}
                 </div>
                 <div className="prose dark:prose-invert max-w-none">
                   <h3>Decision Analysis</h3>
