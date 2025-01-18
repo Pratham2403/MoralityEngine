@@ -1,12 +1,11 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "http://0.0.0.0:6969",
+  baseURL: "http://localhost:8000",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-  timeout: 10000,
 });
 
 axiosInstance.interceptors.request.use(

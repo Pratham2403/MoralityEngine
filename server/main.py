@@ -9,9 +9,21 @@ from Agents.converter_agent import convert_json
 from Agents.master_agents import initiate_masters
 from Agents.logic_summariser import summarise_concept
 from Agents.frontend_handler import frontend_generator
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Add your frontend URLs
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],  # Specify only the methods you need
+    allow_headers=["Content-Type", "Authorization"],  # Specify required headers
+)
 
 # Initialize the FastAPI app
-app = FastAPI()
 
 @app.post("/moralise")
 async def moralise(request: Request):
@@ -124,3 +136,5 @@ async def moralise(request: Request):
 
 # To run the FastAPI server, use:
 # uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# uvicorn main:app --reload --port 8000
+

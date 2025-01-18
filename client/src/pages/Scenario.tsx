@@ -19,9 +19,9 @@ export default function Scenario() {
     ut_pr: 33,
     dt_pr: 33,
     ve_pr: 34,
-    env: "",
-    A: "",
-    B: "",
+    env: "You are a sniper and a terrorist has held a victim hostage. If you shoot the terrorist, there is a 90% chance you will successfully neutralize the threat, but there is a 10% chance the hostage may be killed in the process. If you do not shoot, there is a chance the terrorist may shoot the hostage, but we do not have information on the probability of this happening.",
+    A: "Not take the shot and risk the victim's life.",
+    B: "Take the shot and try to kill the terrorist.",
   });
 
   const [modelData, setModelData] = useState({
@@ -39,16 +39,24 @@ export default function Scenario() {
     setTotalPercentage(total);
   }, [parameters]);
 
+
+
   const handleSliderChange = (
-    value: number,
+    value: number | string,
     parameter: keyof typeof parameters
   ) => {
+    const numericValue = Number(value);
+
+    if (isNaN(numericValue)) {
+      return;
+    }
+
     const currentTotal = Object.entries(parameters)
       .filter(([key]) => key !== parameter)
-      .reduce((sum, [, value]) => sum + (value as number), 0);
+      .reduce((sum, [, val]) => sum + (Number(val) || 0), 0);
 
-    const maxAllowed = 100 - currentTotal;
-    const newValue = Math.min(value, maxAllowed);
+    const maxAllowed = Math.max(0, 100 - currentTotal);
+    const newValue = Math.min(Math.max(0, numericValue), maxAllowed);
 
     setParameters((prev) => ({
       ...prev,
@@ -79,10 +87,11 @@ export default function Scenario() {
       parameters,
     });
 
+
     if (res.data) {
       setModelData({
-        toSave: getValueCaseInsensitive(res.data, "toSave"),
-        moralityScore: getValueCaseInsensitive(res.data, "moralityScore"),
+        toSave: getValueCaseInsensitive(res.data, "to_save"),
+        moralityScore: getValueCaseInsensitive(res.data, "morality_score"),
         A: getValueCaseInsensitive(res.data, "A"),
         B: getValueCaseInsensitive(res.data, "B"),
         description: getValueCaseInsensitive(res.data, "description"),
@@ -276,7 +285,6 @@ export default function Scenario() {
               </CardContent>
             </Card>
           </TabsContent>
-          // ...existing code...
           <TabsContent value="results">
             <Card>
               <CardContent className="pt-6">
@@ -305,10 +313,6 @@ export default function Scenario() {
                   <p>
                     <strong>Morality Score:</strong> {modelData.moralityScore}
                   </p>
-                  <h4 className="text-lg font-semibold mt-4">Option A</h4>
-                  <p>{modelData.A}</p>
-                  <h4 className="text-lg font-semibold mt-4">Option B</h4>
-                  <p>{modelData.B}</p>
                   <h4 className="text-lg font-semibold mt-4">Explanation</h4>
                   <p>{modelData.description}</p>
                 </div>
