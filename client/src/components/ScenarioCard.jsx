@@ -3,14 +3,9 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { DivideIcon as LucideIcon } from 'lucide-react';
 
-interface ScenarioCardProps {
-  id: string;
-  title: string;
-  description: string;
-  icon: LucideIcon;
-}
 
-export default function ScenarioCard({ id, title, description, icon: Icon }: ScenarioCardProps) {
+
+export default function ScenarioCard({ id, title, description, icon: Icon }) {
   const navigate = useNavigate();
 
   return (

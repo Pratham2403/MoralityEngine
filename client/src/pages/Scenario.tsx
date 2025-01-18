@@ -1,58 +1,56 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { Progress } from '@/components/ui/progress';
-
-const scenarios = {
-  car: {
-    title: 'Self-Driving Car Dilemma',
-    description: 'An autonomous vehicle must make a split-second decision between two harmful outcomes.',
-  },
-  boat: {
-    title: 'Overloaded Boat Scenario',
-    description: 'A rescue boat must decide which group of people to save first.',
-  },
-  doctor: {
-    title: 'Organ Donation Dilemma',
-    description: 'Deciding how to allocate limited organ donations among multiple patients.',
-  },
-  sniper: {
-    title: 'Tactical Response Scenario',
-    description: 'Evaluating the use of force in a hostage situation.',
-  },
-};
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
+import scenarios from "@/lib/scenarios.json";
+import { Textarea } from "@/components/ui/textarea";
+import { getValueCaseInsensitive } from "@/lib/helper.function";
+import axiosInstance from "@/api/axiosInstance";
 
 export default function Scenario() {
   const { id } = useParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [parameters, setParameters] = useState({
-    utilitarianism: 33,
-    deontology: 33,
-    virtueEthics: 34,
+    ut_pr: 33,
+    dt_pr: 33,
+    ve_pr: 34,
+    env: "",
+    A: "",
+    B: "",
+  });
+
+  const [modelData, setModelData] = useState({
+    toSave: "",
+    moralityScore: "",
+    A: "",
+    B: "",
+    description: "",
   });
 
   const [totalPercentage, setTotalPercentage] = useState(100);
 
   useEffect(() => {
-    const total = parameters.utilitarianism + parameters.deontology + parameters.virtueEthics;
+    const total = parameters.ut_pr + parameters.dt_pr + parameters.ve_pr;
     setTotalPercentage(total);
   }, [parameters]);
 
-  const handleSliderChange = (value: number, parameter: keyof typeof parameters) => {
+  const handleSliderChange = (
+    value: number,
+    parameter: keyof typeof parameters
+  ) => {
     const currentTotal = Object.entries(parameters)
       .filter(([key]) => key !== parameter)
-      .reduce((sum, [, value]) => sum + value, 0);
+      .reduce((sum, [, value]) => sum + (value as number), 0);
 
-    // Ensure the new value doesn't exceed 100 when added to other values
     const maxAllowed = 100 - currentTotal;
     const newValue = Math.min(value, maxAllowed);
 
-    setParameters(prev => ({
+    setParameters((prev) => ({
       ...prev,
       [parameter]: newValue,
     }));
@@ -63,26 +61,38 @@ export default function Scenario() {
   const handleSimulate = async () => {
     if (totalPercentage !== 100) {
       toast({
-        title: 'Invalid Parameters',
-        description: 'The total of all parameters must equal 100%',
-        variant: 'destructive',
+        title: "Invalid Parameters",
+        description: "The total of all parameters must equal 100%",
+        variant: "destructive",
       });
       return;
     }
 
     setLoading(true);
     toast({
-      title: 'Processing scenario...',
-      description: 'The AI model is analyzing the ethical parameters.',
+      title: "Processing scenario...",
+      description: "The Morality Engine is analyzing the ethical parameters.",
     });
 
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const res = await axiosInstance.post("/moralise", {
+      parameters,
+    });
+
+    if (res.data) {
+      setModelData({
+        toSave: getValueCaseInsensitive(res.data, "toSave"),
+        moralityScore: getValueCaseInsensitive(res.data, "moralityScore"),
+        A: getValueCaseInsensitive(res.data, "A"),
+        B: getValueCaseInsensitive(res.data, "B"),
+        description: getValueCaseInsensitive(res.data, "description"),
+      });
+    }
 
     setLoading(false);
     toast({
-      title: 'Analysis complete',
-      description: 'The model has generated its ethical decision.',
+      title: "Analysis complete",
+      description: "The model has generated its ethical decision.",
     });
   };
 
@@ -91,41 +101,96 @@ export default function Scenario() {
   }
 
   const getProgressColor = () => {
-    if (totalPercentage === 100) return 'bg-green-500';
-    if (totalPercentage > 100) return 'bg-red-500';
-    return 'bg-blue-500';
+    if (totalPercentage === 100) return "bg-green-500";
+    if (totalPercentage > 100) return "bg-red-500";
+    return "bg-blue-500";
   };
 
   return (
     <div className="container py-12">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold tracking-tight mb-4">{scenario.title}</h1>
-        <p className="text-xl text-muted-foreground mb-8">{scenario.description}</p>
+        <h1 className="text-4xl font-bold tracking-tight mb-4">
+          {scenario.title}
+        </h1>
+        <p className="text-xl text-muted-foreground mb-8">
+          {scenario.description}
+        </p>
 
         <Tabs defaultValue="parameters" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="parameters">Parameters</TabsTrigger>
             <TabsTrigger value="results">Results</TabsTrigger>
           </TabsList>
-
           <TabsContent value="parameters">
             <Card>
               <CardContent className="pt-6 space-y-8">
                 <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="env">
+                    Environment
+                  </label>
+                  <Textarea
+                    id="env"
+                    value={parameters.env}
+                    onChange={(e) =>
+                      setParameters((prev) => ({
+                        ...prev,
+                        env: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter environment details..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="optionA">
+                    Option A
+                  </label>
+                  <Textarea
+                    id="optionA"
+                    value={parameters.A}
+                    onChange={(e) =>
+                      setParameters((prev) => ({
+                        ...prev,
+                        A: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter Option A details..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" htmlFor="optionB">
+                    Option B
+                  </label>
+                  <Textarea
+                    id="optionB"
+                    value={parameters.B}
+                    onChange={(e) =>
+                      setParameters((prev) => ({
+                        ...prev,
+                        B: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter Option B details..."
+                  />
+                </div>
+                <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-sm font-medium">Parameter Distribution</label>
-                    <span className={`text-sm font-medium ${
-                      totalPercentage === 100 
-                        ? 'text-green-500' 
-                        : totalPercentage > 100 
-                          ? 'text-red-500' 
-                          : 'text-blue-500'
-                    }`}>
+                    <label className="text-sm font-medium">
+                      Parameter Distribution
+                    </label>
+                    <span
+                      className={`text-sm font-medium ${
+                        totalPercentage === 100
+                          ? "text-green-500"
+                          : totalPercentage > 100
+                          ? "text-red-500"
+                          : "text-blue-500"
+                      }`}
+                    >
                       Total: {totalPercentage}%
                     </span>
                   </div>
-                  <Progress 
-                    value={totalPercentage} 
+                  <Progress
+                    value={totalPercentage}
                     className={getProgressColor()}
                     max={100}
                   />
@@ -139,11 +204,15 @@ export default function Scenario() {
                         (Maximize overall well-being)
                       </span>
                     </label>
-                    <span className="text-sm font-medium">{parameters.utilitarianism}%</span>
+                    <span className="text-sm font-medium">
+                      {parameters.ut_pr}%
+                    </span>
                   </div>
                   <Slider
-                    value={[parameters.utilitarianism]}
-                    onValueChange={([value]) => handleSliderChange(value, 'utilitarianism')}
+                    value={[parameters.ut_pr]}
+                    onValueChange={([value]: [number]) =>
+                      handleSliderChange(value, "ut_pr")
+                    }
                     max={100}
                     step={1}
                   />
@@ -157,11 +226,15 @@ export default function Scenario() {
                         (Follow moral rules)
                       </span>
                     </label>
-                    <span className="text-sm font-medium">{parameters.deontology}%</span>
+                    <span className="text-sm font-medium">
+                      {parameters.dt_pr}%
+                    </span>
                   </div>
                   <Slider
-                    value={[parameters.deontology]}
-                    onValueChange={([value]) => handleSliderChange(value, 'deontology')}
+                    value={[parameters.dt_pr]}
+                    onValueChange={([value]: [number]) =>
+                      handleSliderChange(value, "dt_pr")
+                    }
                     max={100}
                     step={1}
                   />
@@ -175,27 +248,35 @@ export default function Scenario() {
                         (Character-based decisions)
                       </span>
                     </label>
-                    <span className="text-sm font-medium">{parameters.virtueEthics}%</span>
+                    <span className="text-sm font-medium">
+                      {parameters.ve_pr}%
+                    </span>
                   </div>
                   <Slider
-                    value={[parameters.virtueEthics]}
-                    onValueChange={([value]) => handleSliderChange(value, 'virtueEthics')}
+                    value={[parameters.ve_pr]}
+                    onValueChange={([value]: [number]) =>
+                      handleSliderChange(value, "ve_pr")
+                    }
                     max={100}
                     step={1}
                   />
                 </div>
 
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   onClick={handleSimulate}
                   disabled={loading || totalPercentage !== 100}
                 >
-                  {loading ? 'Processing...' : totalPercentage !== 100 ? 'Total must equal 100%' : 'Simulate Decision'}
+                  {loading
+                    ? "Processing..."
+                    : totalPercentage !== 100
+                    ? "Total must equal 100%"
+                    : "Simulate Decision"}
                 </Button>
               </CardContent>
             </Card>
           </TabsContent>
-
+          // ...existing code...
           <TabsContent value="results">
             <Card>
               <CardContent className="pt-6">
@@ -205,9 +286,9 @@ export default function Scenario() {
                 <div className="prose dark:prose-invert max-w-none">
                   <h3>Decision Analysis</h3>
                   <p>
-                    Based on the provided ethical parameters, the AI model will generate
-                    a detailed analysis of the scenario and its recommended course of
-                    action.
+                    Based on the provided ethical parameters, the AI model will
+                    generate a detailed analysis of the scenario and its
+                    recommended course of action.
                   </p>
                   <h3>Ethical Reasoning</h3>
                   <p>
@@ -215,6 +296,21 @@ export default function Scenario() {
                     including how different ethical frameworks were weighted and
                     applied to reach the final conclusion.
                   </p>
+                </div>
+                <div className="prose dark:prose-invert max-w-none mt-8">
+                  <h3 className="text-xl font-bold">AI's Recommendation</h3>
+                  <p>
+                    <strong>To Save:</strong> {modelData.toSave}
+                  </p>
+                  <p>
+                    <strong>Morality Score:</strong> {modelData.moralityScore}
+                  </p>
+                  <h4 className="text-lg font-semibold mt-4">Option A</h4>
+                  <p>{modelData.A}</p>
+                  <h4 className="text-lg font-semibold mt-4">Option B</h4>
+                  <p>{modelData.B}</p>
+                  <h4 className="text-lg font-semibold mt-4">Explanation</h4>
+                  <p>{modelData.description}</p>
                 </div>
               </CardContent>
             </Card>

@@ -1,4 +1,4 @@
-import { ModeToggle } from '@/components/mode-toggle';
+import { ModeToggle } from '@/components/mode-toggle.tsx';
 import { Brain } from 'lucide-react';
 
 export default function Navbar() {

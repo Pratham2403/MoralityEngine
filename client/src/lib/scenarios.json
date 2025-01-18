@@ -1,0 +1,19 @@
+{
+  "car": {
+    "title": "Self-Driving Car Dilemma",
+    "description": "An autonomous vehicle must make a split-second decision between two harmful outcomes."
+    
+  },
+  "boat": {
+    "title": "Overloaded Boat Scenario",
+    "description": "A rescue boat must decide which group of people to save first."
+  },
+  "doctor": {
+    "title": "Organ Donation Dilemma",
+    "description": "Deciding how to allocate limited organ donations among multiple patients."
+  },
+  "sniper": {
+    "title": "Tactical Response Scenario",
+    "description": "Evaluating the use of force in a hostage situation."
+  }
+}

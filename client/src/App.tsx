@@ -12,7 +12,7 @@ function App() {
       <Router>
         <div className="min-h-screen flex flex-col w-screen">
           <Navbar />
-          <main className="flex-grow">
+          <main className="flex-grow w-screen place-items-center">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/scenario/:id" element={<Scenario />} />

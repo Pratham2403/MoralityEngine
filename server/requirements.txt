@@ -1,0 +1,4 @@
+langchain-groq
+langchain_google_genai
+uvicorn
+fastapi
