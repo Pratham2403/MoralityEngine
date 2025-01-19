@@ -1,0 +1,16 @@
+.canvas-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000; /* Optional, for a background */
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block; /* Removes extra space below the canvas */
+    background-color: white;
+}

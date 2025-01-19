@@ -5,6 +5,12 @@ node_modules
 package-lock.json
 yarn.lock
 
+# 3D Model files
+**/*.glb
+**/*.gltf
+**/*.fbx
+
+
 # Testing
 coverage
 .nyc_output
