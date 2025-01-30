@@ -1,19 +1,20 @@
 from Agents.custom_jsonifier import extract_json_from_string
 from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI
+import os
 
 def ut_dec(input_llm_string, a, b, understanding):
-    if input_llm_string == "gemini-1.5-flash":
+    if input_llm_string.startswith("gemini"):
         # Open the model using ChatGoogleGenerativeAI
         llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
-            google_api_key="AIzaSyBuqhVIq3qZZI05tgJUmnck31MfTAWLYMs",
+            model=input_llm_string,
+            google_api_key=os.getenv('GOOGLE_API_KEY'),
             temperature=0.2
         )
     else:
         # Open the model using ChatGroq for other models
         llm = ChatGroq(
-            api_key="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",
+            api_key=os.getenv('GROQ_API_KEY'),
             model=input_llm_string
         )
     prompt = f"""

@@ -1,5 +1,7 @@
 venv
-myenv
+
+.env
+
 Agents\__pycache
 
 __pycache__

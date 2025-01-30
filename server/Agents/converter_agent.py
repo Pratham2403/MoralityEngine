@@ -5,7 +5,7 @@ from Agents.custom_jsonifier import extract_json_from_string
 def convert_json(json_input):
     # Initialize the model
     llm = ChatGroq(
-        api_key="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",
+        api_key=os.getenv('GROQ_API_KEY'),
         model="llama-3.1-8b-instant",
     )
     

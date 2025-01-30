@@ -1,29 +1,24 @@
-from fastapi import FastAPI
+from concurrent.futures import ThreadPoolExecutor
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
-from fastapi import Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import math
-import json
-
-# Import the necessary functions
 from Agents.converter_agent import convert_json
 from Agents.master_agents import initiate_masters
 from Agents.logic_summariser import summarise_concept
 from Agents.frontend_handler import frontend_generator
-from fastapi.middleware.cors import CORSMiddleware
-
-app = FastAPI()
-
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Add your frontend URLs
-    allow_credentials=True,
-    allow_methods=["GET", "POST"],  # Specify only the methods you need
-    allow_headers=["Content-Type", "Authorization"],  # Specify required headers
-)
 
 # Initialize the FastAPI app
+app = FastAPI()
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins, change this to specific domains if needed
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 @app.post("/moralise")
 async def moralise(request: Request):
@@ -64,8 +59,6 @@ async def moralise(request: Request):
     collective_explanation = ""
 
     for case in result:
-        # Safely access the keys and handle missing cases with default values (0 for totals and empty string for explanations)
-        
         # Using .get() to avoid errors if the key is missing
         ut_A = case.get('ut', {}).get('A', 0)
         dt_A = case.get('dt', {}).get('A', 0)
@@ -83,36 +76,44 @@ async def moralise(request: Request):
         dt_explanation_B = case.get('dt', {}).get('Explanation', "")
         ve_explanation_B = case.get('ve', {}).get('Explanation', "")
 
-        # For A and B, multiply the values by the respective float numbers and sum them
+        # Compute weighted sum
         total_A += (ut_A * ut_pr) + (dt_A * dt_pr) + (ve_A * ve_pr)
         total_B += (ut_B * ut_pr) + (dt_B * dt_pr) + (ve_B * ve_pr)
         
-        # Append the explanations for A and B to the collective_explanation
-        collective_explanation += ut_explanation_A + "\n\n"  # Explanation for A from 'ut'
-        collective_explanation += dt_explanation_A + "\n\n"  # Explanation for A from 'dt'
-        collective_explanation += ve_explanation_A + "\n\n"  # Explanation for A from 've'
+        # Append explanations
+        collective_explanation += ut_explanation_A + "\n\n"
+        collective_explanation += dt_explanation_A + "\n\n"
+        collective_explanation += ve_explanation_A + "\n\n"
         
-        collective_explanation += ut_explanation_B + "\n\n"  # Explanation for B from 'ut'
-        collective_explanation += dt_explanation_B + "\n\n"  # Explanation for B from 'dt'
-        collective_explanation += ve_explanation_B + "\n\n"  # Explanation for B from 've'
+        collective_explanation += ut_explanation_B + "\n\n"
+        collective_explanation += dt_explanation_B + "\n\n"
+        collective_explanation += ve_explanation_B + "\n\n"
 
     print("Total A:", total_A)
     print("Total B:", total_B)
-    softmax_A = total_A / (total_A + total_B)
-    softmax_B = total_B / (total_A + total_B)
+
+    exp_A = math.exp(total_A)
+    exp_B = math.exp(total_B)
+
+    softmax_A = (exp_A + 1)/ (exp_A + exp_B + 2)
+    softmax_B = (exp_B + 1)/ (exp_A + exp_B + 2)
 
     print("Softmax A:", softmax_A)
     print("Softmax B:", softmax_B)
 
-    # Summarize the collective explanation
-    summarised_value = summarise_concept(collective_explanation)
-    print("Summarised Explanation:", summarised_value)
+    # Execute summarise_concept and frontend_generator in parallel
+    with ThreadPoolExecutor() as executor:
+        future_summarise = executor.submit(summarise_concept, collective_explanation)
+        future_frontend = executor.submit(frontend_generator, boat_case["env"], converted_json)
 
-    # Generate frontend response (you can modify as needed)
-    new_response = frontend_generator(boat_case["env"], converted_json)
+        # Collect results
+        summarised_value = future_summarise.result()
+        new_response = future_frontend.result()
+
+    print("Summarised Explanation:", summarised_value)
     print("Frontend Response:", new_response)
     
-    # Determine the final decision (A or B) based on softmax values
+    # Determine the final decision (A or B)
     to_save = "A" if softmax_A > softmax_B else "B"
     morality_score = softmax_A if softmax_A > softmax_B else softmax_B
 
@@ -136,5 +137,3 @@ async def moralise(request: Request):
 
 # To run the FastAPI server, use:
 # uvicorn main:app --reload --host 0.0.0.0 --port 8000
-# uvicorn main:app --reload --port 8000
-

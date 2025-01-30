@@ -1,11 +1,10 @@
-from Agents.custom_jsonifier import extract_json_from_string
 from langchain_groq import ChatGroq
-from langchain_google_genai import ChatGoogleGenerativeAI
+import os
 
 def summarise_concept(text):
     # Open the model using ChatGroq for other models
     llm = ChatGroq(
-        api_key="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",
+        api_key=os.getenv('GROQ_API_KEY'),
         model="llama-3.3-70b-versatile"
     )
 
